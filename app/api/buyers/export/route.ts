@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const timeline = searchParams.get('timeline') || '';
 
     // Build where clause
-    const where: Record<string, unknown> = {};
+    const where: any = {};
     
     // Ownership check - users can only see their own leads, admins can see all
     if (user.role !== 'admin') {
@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
       lead.status,
       lead.notes || '',
       lead.tags || '',
+      new Date(lead.createdAt).toLocaleDateString(),
       new Date(lead.updatedAt).toLocaleDateString()
     ]);
 

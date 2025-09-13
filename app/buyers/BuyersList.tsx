@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import CSVManager from '../components/CSVManager';
@@ -22,11 +22,7 @@ interface Buyer {
   notes: string | null;
   tags: string | null;
   ownerId: string;
-  updatedAt: Date;
-  owner?: {
-    name: string;
-    email: string;
-  };
+  updatedAt: string;
 }
 
 interface Pagination {
@@ -39,22 +35,34 @@ interface Pagination {
 interface BuyersListProps {
   initialBuyers: Buyer[];
   pagination: Pagination;
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: any;
 }
 
 export default function BuyersList({ initialBuyers, pagination, searchParams }: BuyersListProps) {
-  const [buyers] = useState(initialBuyers);
-  const [search, setSearch] = useState(typeof searchParams.search === 'string' ? searchParams.search : '');
+  const [buyers, setBuyers] = useState(initialBuyers);
+  const [search, setSearch] = useState(searchParams.search || '');
   const [filters, setFilters] = useState({
-    city: typeof searchParams.city === 'string' ? searchParams.city : '',
-    propertyType: typeof searchParams.propertyType === 'string' ? searchParams.propertyType : '',
-    status: typeof searchParams.status === 'string' ? searchParams.status : '',
-    timeline: typeof searchParams.timeline === 'string' ? searchParams.timeline : '',
+    city: searchParams.city || '',
+    propertyType: searchParams.propertyType || '',
+    status: searchParams.status || '',
+    timeline: searchParams.timeline || '',
   });
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const currentSearchParams = useSearchParams();
 
-  const updateURL = useCallback((newParams: Record<string, string>) => {
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (search !== searchParams.search) {
+        updateURL({ search });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const updateURL = (newParams: any) => {
     const params = new URLSearchParams(currentSearchParams);
     
     Object.entries(newParams).forEach(([key, value]) => {
@@ -71,19 +79,7 @@ export default function BuyersList({ initialBuyers, pagination, searchParams }: 
     }
     
     router.push(`/buyers?${params.toString()}`);
-  }, [currentSearchParams, router]);
-
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const currentSearch = typeof searchParams.search === 'string' ? searchParams.search : '';
-      if (search !== currentSearch) {
-        updateURL({ search });
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [search, searchParams.search, updateURL]);
+  };
 
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value };

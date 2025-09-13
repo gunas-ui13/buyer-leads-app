@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(buyer, { status: 201 });
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error(err);
     return NextResponse.json({ error: "Failed to save" }, { status: 500 });
   }

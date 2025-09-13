@@ -2,11 +2,9 @@ import { Suspense } from 'react';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import BuyersList from './BuyersList';
 
 interface SearchParams {
-  [key: string]: string | string[] | undefined;
   page?: string;
   search?: string;
   city?: string;
@@ -20,7 +18,7 @@ interface BuyersPageProps {
   searchParams: SearchParams;
 }
 
-async function getBuyers(searchParams: SearchParams, user: { id: string; role: string }) {
+async function getBuyers(searchParams: SearchParams, user: any) {
   const awaitedSearchParams = await searchParams;
   const page = parseInt(awaitedSearchParams.page || '1');
   const pageSize = 10;
@@ -36,7 +34,7 @@ async function getBuyers(searchParams: SearchParams, user: { id: string; role: s
   } = awaitedSearchParams;
 
   // Build where clause
-  const where: Record<string, unknown> = {};
+  const where: any = {};
   
   // Ownership check - users can only see their own leads, admins can see all
   if (user.role !== 'admin') {
@@ -58,7 +56,7 @@ async function getBuyers(searchParams: SearchParams, user: { id: string; role: s
 
   // Build orderBy clause
   const [sortField, sortOrder] = sort.split('_');
-  const orderBy: Record<string, string> = {};
+  const orderBy: any = {};
   orderBy[sortField] = sortOrder;
 
   const [buyers, totalCount] = await Promise.all([
@@ -71,22 +69,8 @@ async function getBuyers(searchParams: SearchParams, user: { id: string; role: s
     prisma.buyer.count({ where })
   ]);
 
-  // For admin users, we need to get owner information
-  // This is a simplified approach - in production you'd want to use Prisma relations
-  let buyersWithOwners = buyers;
-  if (user.role === 'admin') {
-    // In a real app, you'd use Prisma relations, but for now we'll add a placeholder
-    buyersWithOwners = buyers.map(buyer => ({
-      ...buyer,
-      owner: {
-        name: 'User',
-        email: 'user@example.com'
-      }
-    }));
-  }
-
   return {
-    buyers: buyersWithOwners,
+    buyers,
     pagination: {
       page,
       pageSize,
@@ -117,26 +101,21 @@ export default async function BuyersPage({ searchParams }: BuyersPageProps) {
               </h1>
               <p className="text-xl text-slate-600 mt-2">
                 Manage and track your property buyer leads
-                {user.role === 'admin' && (
-                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    Admin View - All Leads
-                  </span>
-                )}
               </p>
             </div>
             <div className="flex gap-4">
-              <Link
+              <a
                 href="/buyers/import"
                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
               >
                 Import CSV
-              </Link>
-              <Link
+              </a>
+              <a
                 href="/buyers/new"
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
               >
                 Add New Lead
-              </Link>
+              </a>
             </div>
           </div>
         </div>
