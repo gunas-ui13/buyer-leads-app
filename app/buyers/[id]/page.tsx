@@ -5,7 +5,7 @@ import Link from 'next/link';
 // Prisma types are used for type safety but not directly in the component
 
 interface BuyerDetailPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 async function getBuyer(id: string, user: { id: string; role: string }) {
@@ -38,7 +38,8 @@ export default async function BuyerDetailPage({ params }: BuyerDetailPageProps) 
     redirect('/login');
   }
 
-  const buyer = await getBuyer(params.id, user);
+  const { id } = await params;
+  const buyer = await getBuyer(id, user);
 
   if (!buyer) {
     notFound();

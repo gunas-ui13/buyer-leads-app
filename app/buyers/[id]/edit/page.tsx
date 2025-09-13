@@ -25,7 +25,7 @@ interface Buyer {
 }
 
 interface EditPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function EditBuyerPage({ params }: EditPageProps) {
@@ -37,11 +37,12 @@ export default function EditBuyerPage({ params }: EditPageProps) {
 
   useEffect(() => {
     fetchBuyer();
-  }, [params.id, fetchBuyer]);
+  }, [fetchBuyer]);
 
   const fetchBuyer = useCallback(async () => {
     try {
-      const response = await fetch(`/api/buyers/${params.id}`);
+      const { id } = await params;
+      const response = await fetch(`/api/buyers/${id}`);
       if (response.ok) {
         const data = await response.json();
         setBuyer(data);
@@ -53,7 +54,7 @@ export default function EditBuyerPage({ params }: EditPageProps) {
     } finally {
       setLoading(false);
     }
-  }, [params.id]);
+  }, [params]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +64,8 @@ export default function EditBuyerPage({ params }: EditPageProps) {
     setError('');
 
     try {
-      const response = await fetch(`/api/buyers/${params.id}`, {
+      const { id } = await params;
+      const response = await fetch(`/api/buyers/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +74,7 @@ export default function EditBuyerPage({ params }: EditPageProps) {
       });
 
       if (response.ok) {
-        router.push(`/buyers/${params.id}`);
+        router.push(`/buyers/${id}`);
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to update buyer');

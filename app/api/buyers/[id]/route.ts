@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 // GET individual buyer
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -13,8 +13,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const buyer = await prisma.buyer.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         history: {
           orderBy: { changedAt: 'desc' },
@@ -45,7 +46,7 @@ export async function GET(
 // PUT update buyer
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -53,11 +54,12 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const data = await request.json();
     
     // Check if buyer exists and user has permission
     const existingBuyer = await prisma.buyer.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!existingBuyer) {
@@ -70,7 +72,7 @@ export async function PUT(
     }
 
     const updatedBuyer = await prisma.buyer.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         fullName: data.fullName,
         email: data.email,
@@ -129,7 +131,7 @@ export async function PUT(
 // DELETE buyer
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -137,9 +139,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     // Check if buyer exists and user has permission
     const existingBuyer = await prisma.buyer.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!existingBuyer) {
@@ -153,7 +156,7 @@ export async function DELETE(
 
     // Delete buyer (history will be cascade deleted)
     await prisma.buyer.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({ success: true });
