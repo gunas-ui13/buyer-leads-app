@@ -35,34 +35,34 @@ interface Pagination {
 interface BuyersListProps {
   initialBuyers: Buyer[];
   pagination: Pagination;
-  searchParams: any;
+  searchParams: Record<string, string | string[] | undefined>;
 }
 
 export default function BuyersList({ initialBuyers, pagination, searchParams }: BuyersListProps) {
   const [buyers, setBuyers] = useState(initialBuyers);
-  const [search, setSearch] = useState(searchParams.search || '');
+  const [search, setSearch] = useState(typeof searchParams.search === 'string' ? searchParams.search : '');
   const [filters, setFilters] = useState({
-    city: searchParams.city || '',
-    propertyType: searchParams.propertyType || '',
-    status: searchParams.status || '',
-    timeline: searchParams.timeline || '',
+    city: typeof searchParams.city === 'string' ? searchParams.city : '',
+    propertyType: typeof searchParams.propertyType === 'string' ? searchParams.propertyType : '',
+    status: typeof searchParams.status === 'string' ? searchParams.status : '',
+    timeline: typeof searchParams.timeline === 'string' ? searchParams.timeline : '',
   });
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const currentSearchParams = useSearchParams();
 
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (search !== searchParams.search) {
+      const currentSearch = typeof searchParams.search === 'string' ? searchParams.search : '';
+      if (search !== currentSearch) {
         updateURL({ search });
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, searchParams.search, updateURL]);
 
-  const updateURL = (newParams: any) => {
+  const updateURL = (newParams: Record<string, string>) => {
     const params = new URLSearchParams(currentSearchParams);
     
     Object.entries(newParams).forEach(([key, value]) => {

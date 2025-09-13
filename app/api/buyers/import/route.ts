@@ -3,7 +3,15 @@ import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 // CSV validation schema
-const CSVRowSchema = {
+type ValidationRule = {
+  required: boolean;
+  type: string;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  values?: string[];
+};
+const CSVRowSchema: Record<string, ValidationRule> = {
   fullName: { required: true, type: 'string', minLength: 2, maxLength: 80 },
   email: { required: false, type: 'email' },
   phone: { required: true, type: 'string', minLength: 10, maxLength: 15 },
@@ -20,7 +28,7 @@ const CSVRowSchema = {
   tags: { required: false, type: 'string' }
 };
 
-function validateCSVRow(row: any, rowIndex: number): { isValid: boolean; errors: string[] } {
+function validateCSVRow(row: Record<string, any>): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   // Check required fields
@@ -55,10 +63,12 @@ function validateCSVRow(row: any, rowIndex: number): { isValid: boolean; errors:
           errors.push(`${field} must be at least ${rules.min}`);
         }
       } else if (rules.type === 'enum') {
-        if (!rules.values.includes(value)) {
-          errors.push(`${field} must be one of: ${rules.values.join(', ')}`);
-        }
-      }
+  if (!rules.values) return; // <-- stop if values are undefined
+  if (!rules.values.includes(value)) {
+    errors.push(`${field} must be one of: ${rules.values.join(', ')}`);
+  }
+}
+
     }
   });
 
@@ -106,7 +116,7 @@ export async function POST(request: NextRequest) {
     const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
     const rows = lines.slice(1).map(line => {
       const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-      const row: any = {};
+      const row: Record<string, any> = {};
       headers.forEach((header, index) => {
         row[header.toLowerCase().replace(/\s+/g, '')] = values[index] || '';
       });
@@ -116,7 +126,7 @@ export async function POST(request: NextRequest) {
     // Validate rows
     const validationResults = rows.map((row, index) => ({
       rowIndex: index + 2, // +2 because we skip header and arrays are 0-indexed
-      ...validateCSVRow(row, index + 2),
+      ...validateCSVRow(row),
       data: row
     }));
 

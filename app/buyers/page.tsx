@@ -18,7 +18,7 @@ interface BuyersPageProps {
   searchParams: SearchParams;
 }
 
-async function getBuyers(searchParams: SearchParams, user: any) {
+async function getBuyers(searchParams: SearchParams, user: { id: string; role: string }) {
   const awaitedSearchParams = await searchParams;
   const page = parseInt(awaitedSearchParams.page || '1');
   const pageSize = 10;
@@ -34,7 +34,7 @@ async function getBuyers(searchParams: SearchParams, user: any) {
   } = awaitedSearchParams;
 
   // Build where clause
-  const where: any = {};
+  const where: Record<string, any> = {};
   
   // Ownership check - users can only see their own leads, admins can see all
   if (user.role !== 'admin') {
@@ -56,7 +56,7 @@ async function getBuyers(searchParams: SearchParams, user: any) {
 
   // Build orderBy clause
   const [sortField, sortOrder] = sort.split('_');
-  const orderBy: any = {};
+  const orderBy: Record<string, string> = {};
   orderBy[sortField] = sortOrder;
 
   const [buyers, totalCount] = await Promise.all([
