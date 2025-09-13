@@ -35,10 +35,6 @@ export default function EditBuyerPage({ params }: EditPageProps) {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
-    fetchBuyer();
-  }, [fetchBuyer]);
-
   const fetchBuyer = useCallback(async () => {
     try {
       const { id } = await params;
@@ -55,6 +51,10 @@ export default function EditBuyerPage({ params }: EditPageProps) {
       setLoading(false);
     }
   }, [params]);
+
+  useEffect(() => {
+    fetchBuyer();
+  }, [fetchBuyer]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
