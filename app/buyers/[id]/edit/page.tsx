@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -37,9 +37,9 @@ export default function EditBuyerPage({ params }: EditPageProps) {
 
   useEffect(() => {
     fetchBuyer();
-  }, [params.id]);
+  }, [params.id, fetchBuyer]);
 
-  const fetchBuyer = async () => {
+  const fetchBuyer = useCallback(async () => {
     try {
       const response = await fetch(`/api/buyers/${params.id}`);
       if (response.ok) {
@@ -48,12 +48,12 @@ export default function EditBuyerPage({ params }: EditPageProps) {
       } else {
         setError('Failed to load buyer details');
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to load buyer details');
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +77,7 @@ export default function EditBuyerPage({ params }: EditPageProps) {
         const data = await response.json();
         setError(data.error || 'Failed to update buyer');
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to update buyer');
     } finally {
       setSaving(false);

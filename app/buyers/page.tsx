@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import BuyersList from './BuyersList';
 
 interface SearchParams {
@@ -124,18 +125,18 @@ export default async function BuyersPage({ searchParams }: BuyersPageProps) {
               </p>
             </div>
             <div className="flex gap-4">
-              <a
+              <Link
                 href="/buyers/import"
                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
               >
                 Import CSV
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/buyers/new"
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
               >
                 Add New Lead
-              </a>
+              </Link>
             </div>
           </div>
         </div>
