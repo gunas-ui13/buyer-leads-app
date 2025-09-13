@@ -12,6 +12,7 @@ interface SearchParams {
   status?: string;
   timeline?: string;
   sort?: string;
+  [key: string]: string | string[] | undefined;
 }
 
 interface BuyersPageProps {
@@ -34,7 +35,7 @@ async function getBuyers(searchParams: SearchParams, user: { id: string; role: s
   } = awaitedSearchParams;
 
   // Build where clause
-  const where: Record<string, any> = {};
+  const where: Record<string, unknown> = {};
   
   // Ownership check - users can only see their own leads, admins can see all
   if (user.role !== 'admin') {
@@ -59,7 +60,7 @@ async function getBuyers(searchParams: SearchParams, user: { id: string; role: s
   const orderBy: Record<string, string> = {};
   orderBy[sortField] = sortOrder;
 
-  const [buyers, totalCount] = await Promise.all([
+  const [buyersData, totalCount] = await Promise.all([
     prisma.buyer.findMany({
       where,
       orderBy,
@@ -68,6 +69,12 @@ async function getBuyers(searchParams: SearchParams, user: { id: string; role: s
     }),
     prisma.buyer.count({ where })
   ]);
+
+  // Convert Date objects to strings for the frontend
+  const buyers = buyersData.map(buyer => ({
+    ...buyer,
+    updatedAt: buyer.updatedAt.toISOString()
+  }));
 
   return {
     buyers,

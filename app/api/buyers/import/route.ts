@@ -11,6 +11,7 @@ type ValidationRule = {
   min?: number;
   values?: string[];
 };
+
 const CSVRowSchema: Record<string, ValidationRule> = {
   fullName: { required: true, type: 'string', minLength: 2, maxLength: 80 },
   email: { required: false, type: 'email' },
@@ -28,54 +29,53 @@ const CSVRowSchema: Record<string, ValidationRule> = {
   tags: { required: false, type: 'string' }
 };
 
-function validateCSVRow(row: Record<string, any>): { isValid: boolean; errors: string[] } {
+function validateCSVRow(row: Record<string, unknown>): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   // Check required fields
   Object.entries(CSVRowSchema).forEach(([field, rules]) => {
     const value = row[field];
+    const stringValue = String(value || '');
     
-    if (rules.required && (!value || value.trim() === '')) {
+    if (rules.required && (!value || stringValue.trim() === '')) {
       errors.push(`${field} is required`);
       return;
     }
 
-    if (value && value.trim() !== '') {
+    if (value && stringValue.trim() !== '') {
       // Type validation
       if (rules.type === 'string') {
         if (typeof value !== 'string') {
           errors.push(`${field} must be a string`);
-        } else if (rules.minLength && value.length < rules.minLength) {
+        } else if (rules.minLength && stringValue.length < rules.minLength) {
           errors.push(`${field} must be at least ${rules.minLength} characters`);
-        } else if (rules.maxLength && value.length > rules.maxLength) {
+        } else if (rules.maxLength && stringValue.length > rules.maxLength) {
           errors.push(`${field} must be less than ${rules.maxLength} characters`);
         }
       } else if (rules.type === 'email') {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
+        if (!emailRegex.test(stringValue)) {
           errors.push(`${field} must be a valid email address`);
         }
       } else if (rules.type === 'number') {
-        const numValue = parseFloat(value);
+        const numValue = parseFloat(stringValue);
         if (isNaN(numValue)) {
           errors.push(`${field} must be a valid number`);
         } else if (rules.min !== undefined && numValue < rules.min) {
           errors.push(`${field} must be at least ${rules.min}`);
         }
       } else if (rules.type === 'enum') {
-  if (!rules.values) return; // <-- stop if values are undefined
-  if (!rules.values.includes(value)) {
-    errors.push(`${field} must be one of: ${rules.values.join(', ')}`);
-  }
-}
-
+        if (!rules.values || !rules.values.includes(stringValue)) {
+          errors.push(`${field} must be one of: ${rules.values?.join(', ') || 'valid options'}`);
+        }
+      }
     }
   });
 
   // Custom validation for budget
   if (row.budgetMin && row.budgetMax) {
-    const minBudget = parseFloat(row.budgetMin);
-    const maxBudget = parseFloat(row.budgetMax);
+    const minBudget = parseFloat(String(row.budgetMin));
+    const maxBudget = parseFloat(String(row.budgetMax));
     if (!isNaN(minBudget) && !isNaN(maxBudget) && maxBudget < minBudget) {
       errors.push('Maximum budget must be greater than or equal to minimum budget');
     }
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
     const rows = lines.slice(1).map(line => {
       const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-      const row: Record<string, any> = {};
+      const row: Record<string, unknown> = {};
       headers.forEach((header, index) => {
         row[header.toLowerCase().replace(/\s+/g, '')] = values[index] || '';
       });
@@ -151,20 +151,20 @@ export async function POST(request: NextRequest) {
       for (const result of validRows) {
         const lead = await tx.buyer.create({
           data: {
-            fullName: result.data.fullname,
-            email: result.data.email || null,
-            phone: result.data.phone,
-            city: result.data.city,
-            propertyType: result.data.propertytype,
-            bhk: result.data.bhk || null,
-            purpose: result.data.purpose,
-            budgetMin: result.data.budgetmin ? parseFloat(result.data.budgetmin) : null,
-            budgetMax: result.data.budgetmax ? parseFloat(result.data.budgetmax) : null,
-            timeline: result.data.timeline,
-            source: result.data.source,
-            status: result.data.status || 'New',
-            notes: result.data.notes || null,
-            tags: result.data.tags || null,
+            fullName: String(result.data.fullname),
+            email: result.data.email ? String(result.data.email) : null,
+            phone: String(result.data.phone),
+            city: String(result.data.city) as any,
+            propertyType: String(result.data.propertytype) as any,
+            bhk: result.data.bhk ? String(result.data.bhk) as any : null,
+            purpose: String(result.data.purpose) as any,
+            budgetMin: result.data.budgetmin ? parseFloat(String(result.data.budgetmin)) : null,
+            budgetMax: result.data.budgetmax ? parseFloat(String(result.data.budgetmax)) : null,
+            timeline: String(result.data.timeline) as any,
+            source: String(result.data.source) as any,
+            status: result.data.status ? String(result.data.status) as any : 'New',
+            notes: result.data.notes ? String(result.data.notes) : null,
+            tags: result.data.tags ? String(result.data.tags) : null,
             ownerId: user.id
           }
         });

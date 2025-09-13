@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
-
-// Define filter type
-type BuyerFilter = Prisma.BuyerWhereInput;
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,8 +17,8 @@ export async function GET(request: NextRequest) {
     const timeline = searchParams.get('timeline') || '';
 
     // Build where clause
-    const where: BuyerFilter = {};
-
+    const where: Record<string, unknown> = {};
+    
     // Ownership check - users can only see their own leads, admins can see all
     if (user.role !== 'admin') {
       where.ownerId = user.id;
@@ -33,7 +29,7 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { fullName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } }
       ];
     }
 
@@ -45,7 +41,7 @@ export async function GET(request: NextRequest) {
     // Get all matching leads
     const leads = await prisma.buyer.findMany({
       where,
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { updatedAt: 'desc' }
     });
 
     // Convert to CSV format
@@ -64,52 +60,52 @@ export async function GET(request: NextRequest) {
       'Status',
       'Notes',
       'Tags',
-      'Updated At',
+      'Updated At'
     ];
 
-    const csvRows = leads.map((lead) => [
+    const csvRows = leads.map(lead => [
       lead.fullName,
       lead.email || '',
       lead.phone,
       lead.city,
       lead.propertyType,
-      lead.bhk ?? '',
+      lead.bhk || '',
       lead.purpose,
-      lead.budgetMin ?? '',
-      lead.budgetMax ?? '',
+      lead.budgetMin || '',
+      lead.budgetMax || '',
       lead.timeline,
       lead.source,
       lead.status,
       lead.notes || '',
       lead.tags || '',
-      new Date(lead.updatedAt).toLocaleDateString(),
+      new Date(lead.updatedAt).toLocaleDateString()
     ]);
 
-    // Create CSV content with proper escaping
+    // Create CSV content
     const csvContent = [
       csvHeaders.join(','),
-      ...csvRows.map((row) =>
-        row
-          .map((field) =>
-            typeof field === 'string' && field.includes(',')
-              ? `"${field.replace(/"/g, '""')}"`
-              : field
-          )
-          .join(',')
-      ),
+      ...csvRows.map(row => 
+        row.map(field => 
+          typeof field === 'string' && field.includes(',') 
+            ? `"${field.replace(/"/g, '""')}"` 
+            : field
+        ).join(',')
+      )
     ].join('\n');
 
     // Return CSV file
     return new NextResponse(csvContent, {
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': `attachment; filename="buyer-leads-${new Date()
-          .toISOString()
-          .split('T')[0]}.csv"`,
-      },
+        'Content-Disposition': `attachment; filename="buyer-leads-${new Date().toISOString().split('T')[0]}.csv"`
+      }
     });
+
   } catch (error) {
     console.error('CSV export error:', error);
-    return NextResponse.json({ error: 'Failed to export CSV' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to export CSV' },
+      { status: 500 }
+    );
   }
 }

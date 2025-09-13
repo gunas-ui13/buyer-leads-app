@@ -50,18 +50,6 @@ export default function BuyersList({ initialBuyers, pagination, searchParams }: 
   const router = useRouter();
   const currentSearchParams = useSearchParams();
 
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const currentSearch = typeof searchParams.search === 'string' ? searchParams.search : '';
-      if (search !== currentSearch) {
-        updateURL({ search });
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [search, searchParams.search, updateURL]);
-
   const updateURL = (newParams: Record<string, string>) => {
     const params = new URLSearchParams(currentSearchParams);
     
@@ -80,6 +68,18 @@ export default function BuyersList({ initialBuyers, pagination, searchParams }: 
     
     router.push(`/buyers?${params.toString()}`);
   };
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentSearch = typeof searchParams.search === 'string' ? searchParams.search : '';
+      if (search !== currentSearch) {
+        updateURL({ search });
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, searchParams.search, updateURL]);
 
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value };

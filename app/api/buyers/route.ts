@@ -2,47 +2,30 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
-// Strongly typed request body
-type BuyerCreateInput = {
-  fullName: string;
-  email?: string;
-  phone: string;
-  city: string;
-  propertyType: string;
-  bhk?: string;
-  purpose: string;
-  budgetMin?: number;
-  budgetMax?: number;
-  timeline: string;
-  source: string;
-  notes?: string;
-  tags?: string;
-};
-
 export async function POST(req: Request) {
   try {
     const user = await getCurrentUser();
+    
     if (!user) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }
 
-    const data: BuyerCreateInput = await req.json();
-
+    const data = await req.json();
     const buyer = await prisma.buyer.create({
       data: {
         fullName: data.fullName,
-        email: data.email || null,
+        email: data.email,
         phone: data.phone,
         city: data.city,
         propertyType: data.propertyType,
-        bhk: data.bhk || null,
+        bhk: data.bhk,
         purpose: data.purpose,
-        budgetMin: data.budgetMin ?? null,
-        budgetMax: data.budgetMax ?? null,
+        budgetMin: data.budgetMin,
+        budgetMax: data.budgetMax,
         timeline: data.timeline,
         source: data.source,
-        notes: data.notes || null,
-        tags: data.tags || null,
+        notes: data.notes,
+        tags: data.tags,
         ownerId: user.id,
       },
     });
@@ -52,9 +35,8 @@ export async function POST(req: Request) {
       data: {
         buyerId: buyer.id,
         changedBy: user.id,
-        changedAt: new Date(),
         diff: {
-          action: "created",
+          action: 'created',
           fields: {
             fullName: data.fullName,
             email: data.email,
@@ -69,14 +51,14 @@ export async function POST(req: Request) {
             source: data.source,
             notes: data.notes,
             tags: data.tags,
-          },
-        },
-      },
+          }
+        }
+      }
     });
 
     return NextResponse.json(buyer, { status: 201 });
   } catch (err: unknown) {
-    console.error("Buyer creation error:", err);
+    console.error(err);
     return NextResponse.json({ error: "Failed to save" }, { status: 500 });
   }
 }
