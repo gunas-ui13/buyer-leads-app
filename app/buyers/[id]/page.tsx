@@ -227,7 +227,7 @@ export default async function BuyerDetailPage({ params }: BuyerDetailPageProps) 
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-slate-800">
-                      {entry.diff.action === 'created' ? 'Lead created' : 'Lead updated'}
+                      {entry.diff && typeof entry.diff === 'object' && 'action' in entry.diff && entry.diff.action === 'created' ? 'Lead created' : 'Lead updated'}
                     </p>
                     <p className="text-sm text-slate-500">
                       {new Date(entry.changedAt).toLocaleString()}
