@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { City, PropertyType, BHK, Purpose, Timeline, Source, Status } from '@prisma/client';
 
 // CSV validation schema
 type ValidationRule = {
@@ -154,15 +155,15 @@ export async function POST(request: NextRequest) {
             fullName: String(result.data.fullname),
             email: result.data.email ? String(result.data.email) : null,
             phone: String(result.data.phone),
-            city: String(result.data.city) as any,
-            propertyType: String(result.data.propertytype) as any,
-            bhk: result.data.bhk ? String(result.data.bhk) as any : null,
-            purpose: String(result.data.purpose) as any,
+            city: String(result.data.city) as City,
+            propertyType: String(result.data.propertytype) as PropertyType,
+            bhk: result.data.bhk ? String(result.data.bhk) as BHK : null,
+            purpose: String(result.data.purpose) as Purpose,
             budgetMin: result.data.budgetmin ? parseFloat(String(result.data.budgetmin)) : null,
             budgetMax: result.data.budgetmax ? parseFloat(String(result.data.budgetmax)) : null,
-            timeline: String(result.data.timeline) as any,
-            source: String(result.data.source) as any,
-            status: result.data.status ? String(result.data.status) as any : 'New',
+            timeline: String(result.data.timeline) as Timeline,
+            source: String(result.data.source) as Source,
+            status: result.data.status ? String(result.data.status) as Status : 'New',
             notes: result.data.notes ? String(result.data.notes) : null,
             tags: result.data.tags ? String(result.data.tags) : null,
             ownerId: user.id

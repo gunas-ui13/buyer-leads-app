@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
       'Status',
       'Notes',
       'Tags',
+      'Created At',
       'Updated At'
     ];
 

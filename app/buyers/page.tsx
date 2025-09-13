@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import BuyersList from './BuyersList';
 
 interface SearchParams {
+  [key: string]: string | string[] | undefined;
   page?: string;
   search?: string;
   city?: string;
@@ -12,7 +13,6 @@ interface SearchParams {
   status?: string;
   timeline?: string;
   sort?: string;
-  [key: string]: string | string[] | undefined;
 }
 
 interface BuyersPageProps {
@@ -60,7 +60,7 @@ async function getBuyers(searchParams: SearchParams, user: { id: string; role: s
   const orderBy: Record<string, string> = {};
   orderBy[sortField] = sortOrder;
 
-  const [buyersData, totalCount] = await Promise.all([
+  const [buyers, totalCount] = await Promise.all([
     prisma.buyer.findMany({
       where,
       orderBy,
@@ -70,14 +70,22 @@ async function getBuyers(searchParams: SearchParams, user: { id: string; role: s
     prisma.buyer.count({ where })
   ]);
 
-  // Convert Date objects to strings for the frontend
-  const buyers = buyersData.map(buyer => ({
-    ...buyer,
-    updatedAt: buyer.updatedAt.toISOString()
-  }));
+  // For admin users, we need to get owner information
+  // This is a simplified approach - in production you'd want to use Prisma relations
+  let buyersWithOwners = buyers;
+  if (user.role === 'admin') {
+    // In a real app, you'd use Prisma relations, but for now we'll add a placeholder
+    buyersWithOwners = buyers.map(buyer => ({
+      ...buyer,
+      owner: {
+        name: 'User',
+        email: 'user@example.com'
+      }
+    }));
+  }
 
   return {
-    buyers,
+    buyers: buyersWithOwners,
     pagination: {
       page,
       pageSize,
@@ -108,6 +116,11 @@ export default async function BuyersPage({ searchParams }: BuyersPageProps) {
               </h1>
               <p className="text-xl text-slate-600 mt-2">
                 Manage and track your property buyer leads
+                {user.role === 'admin' && (
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    Admin View - All Leads
+                  </span>
+                )}
               </p>
             </div>
             <div className="flex gap-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import CSVManager from '../components/CSVManager';
@@ -22,7 +22,11 @@ interface Buyer {
   notes: string | null;
   tags: string | null;
   ownerId: string;
-  updatedAt: string;
+  updatedAt: Date;
+  owner?: {
+    name: string;
+    email: string;
+  };
 }
 
 interface Pagination {
@@ -39,7 +43,7 @@ interface BuyersListProps {
 }
 
 export default function BuyersList({ initialBuyers, pagination, searchParams }: BuyersListProps) {
-  const [buyers, setBuyers] = useState(initialBuyers);
+  const [buyers] = useState(initialBuyers);
   const [search, setSearch] = useState(typeof searchParams.search === 'string' ? searchParams.search : '');
   const [filters, setFilters] = useState({
     city: typeof searchParams.city === 'string' ? searchParams.city : '',
@@ -50,7 +54,7 @@ export default function BuyersList({ initialBuyers, pagination, searchParams }: 
   const router = useRouter();
   const currentSearchParams = useSearchParams();
 
-  const updateURL = (newParams: Record<string, string>) => {
+  const updateURL = useCallback((newParams: Record<string, string>) => {
     const params = new URLSearchParams(currentSearchParams);
     
     Object.entries(newParams).forEach(([key, value]) => {
@@ -67,7 +71,7 @@ export default function BuyersList({ initialBuyers, pagination, searchParams }: 
     }
     
     router.push(`/buyers?${params.toString()}`);
-  };
+  }, [currentSearchParams, router]);
 
   // Debounced search
   useEffect(() => {
