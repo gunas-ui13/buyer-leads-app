@@ -10,11 +10,11 @@ export async function GET() {
       message: "Database connection successful",
       result 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Database test error:", error);
     return NextResponse.json({ 
       success: false, 
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       databaseUrl: process.env.DATABASE_URL 
     }, { status: 500 });
   }
